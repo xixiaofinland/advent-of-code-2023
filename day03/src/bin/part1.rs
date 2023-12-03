@@ -10,7 +10,8 @@ struct Num {
 
 fn main() {
     let input = fs::read_to_string("./i1.txt").unwrap();
-    do_it(&input);
+    let result = do_it(&input);
+    dbg!(result);
 }
 
 fn do_it(input: &str) -> usize {
@@ -25,15 +26,14 @@ fn do_it(input: &str) -> usize {
 
     let mut result = 0;
     for n in num_result {
-        if is_possible(&n, &symbol_result) {
+        if is_part_num(&n, &symbol_result) {
             result += n.value;
         }
     }
-    dbg!(result);
     result
 }
 
-fn is_possible(n: &Num, symbol_result: &Vec<(i32, i32)>) -> bool {
+fn is_part_num(n: &Num, symbol_result: &Vec<(i32, i32)>) -> bool {
     let locations = get_possible_sym_locations(n);
     for l in locations {
         if symbol_result.contains(&l) {
@@ -46,6 +46,9 @@ fn is_possible(n: &Num, symbol_result: &Vec<(i32, i32)>) -> bool {
 fn get_possible_sym_locations(n: &Num) -> Vec<(i32, i32)> {
     let mut possibles: Vec<(i32, i32)> = vec![];
 
+    // symbols won't locate outside of the borders
+    // but it anyway returns false in the comparsion on the parent function
+    // so we convert to i3 and ignore the border check for simplicity
     let start: i32 = n.start.try_into().unwrap();
     let end: i32 = n.end.try_into().unwrap();
     let line: i32 = n.line.try_into().unwrap();
@@ -68,6 +71,7 @@ fn process_line(line: usize, line_data: &str) -> (Vec<Num>, Vec<(i32, i32)>) {
     let mut is_num_start = true;
     let mut start = 0;
 
+    let end = line_data.chars().count() - 1;
     let indices = line_data.char_indices();
     for (i, ch) in indices {
         if !ch.is_digit(10) && ch != '.' {
@@ -80,6 +84,15 @@ fn process_line(line: usize, line_data: &str) -> (Vec<Num>, Vec<(i32, i32)>) {
                 start = i;
             }
             num_in_string.push(ch);
+
+            if i == end {
+                num_result.push(Num {
+                    line,
+                    value: num_in_string.parse::<usize>().unwrap(),
+                    start,
+                    end: i - 1,
+                });
+            }
         } else {
             if !num_in_string.is_empty() {
                 num_result.push(Num {
@@ -95,6 +108,7 @@ fn process_line(line: usize, line_data: &str) -> (Vec<Num>, Vec<(i32, i32)>) {
             num_in_string.clear();
         }
     }
+
     (num_result, symbol_result)
 }
 
