@@ -9,7 +9,19 @@ struct Race {
 fn main() {
     let input = fs::read_to_string("./i1.txt").unwrap();
     let races = parse_input(&input);
-    dbg!(races);
+    let result: Vec<_> = races
+        .iter()
+        .map(|race| {
+            let mut beats = 0;
+            for t in 1..race.time {
+                if do_race(t, race) > race.distance {
+                    beats += 1;
+                }
+            }
+            beats
+        })
+        .collect();
+    dbg!(result.iter().fold(1, |acc, x| acc * x));
 }
 
 fn parse_input(input: &str) -> Vec<Race> {
@@ -39,7 +51,11 @@ fn parse_input(input: &str) -> Vec<Race> {
     races
 }
 
-fn do_race(hold_time: usize) -> usize {}
+fn do_race(hold_time: usize, race: &Race) -> usize {
+    let travel_time = race.time - hold_time;
+    let speed = hold_time;
+    speed * travel_time
+}
 
 #[cfg(test)]
 mod tests {
@@ -47,8 +63,7 @@ mod tests {
 
     #[test]
     fn t1() {
-        let v = "Time:      7  15   30
-            Distance:  9  40  200";
-        // assert_eq!(do_it(v), 4361);
+        let v = "Time:      7  15   30\n Distance:  9  40  200";
+        assert_eq!(parse_input(v).len(), 3);
     }
 }
