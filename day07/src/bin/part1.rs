@@ -1,8 +1,11 @@
+use std::cmp::Ordering;
 use std::fs;
 
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug)]
 struct Hand {
     cards: Vec<usize>,
+    value: usize,
+    t: Type,
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -16,14 +19,41 @@ enum Type {
     Five,
 }
 
-// impl PartialEq for Hand {
-//     fn eq(&self, other: &Self) -> bool {
-//         (self.car == other.car) && (self.customer_details == other.customer_details)
-//     }
-// }
+impl PartialEq for Hand {
+    fn eq(&self, other: &Self) -> bool {
+        self.t == other.t
+    }
+}
+
+impl Eq for Hand {}
+
+impl PartialOrd for Hand {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cards.cmp(&other.cards))
+    }
+}
+
+impl Ord for Hand {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.t > other.t {
+            return Ordering::Greater;
+        } else if self.t < other.t {
+            return Ordering::Less;
+        }
+
+        for (i, v) in self.cards.iter().enumerate() {
+            if v < &other.cards[i] {
+                return Ordering::Less;
+            } else if v > &other.cards[i] {
+                return Ordering::Greater;
+            }
+        }
+        Ordering::Equal
+    }
+}
 
 impl Hand {
-    fn new(cards: &str) -> Self {
+    fn new(cards: &str, value: usize) -> Self {
         let cards: Vec<usize> = cards
             .chars()
             .map(|c| match c {
@@ -44,12 +74,14 @@ impl Hand {
             })
             .collect();
 
-        Self { cards }
+        let t = Self::get_type(&cards);
+
+        Self { cards, value, t }
     }
 
-    fn get_type(&self) -> Type {
+    fn get_type(cards: &Vec<usize>) -> Type {
         let mut duplicates = vec![0; 15];
-        for c in &self.cards {
+        for c in cards {
             duplicates[*c] += 1;
         }
 
@@ -81,12 +113,27 @@ impl Hand {
 }
 
 fn main() {
-    // let input = fs::read_to_string("./i1.txt").unwrap();
-    // let result = do_it(&input);
-    // dbg!(result);
+    let input = fs::read_to_string("./i1.txt").unwrap();
+    let r = parse(&input);
+    dbg!(&r);
 }
 
-// fn do_it(input: &str) {}
+fn parse(input: &str) -> usize {
+    let mut hands: Vec<Hand> = Vec::new();
+
+    for l in input.lines() {
+        let (cards, value) = l.split_once(" ").unwrap();
+        let value = value.parse::<usize>().unwrap();
+        hands.push(Hand::new(cards, value));
+    }
+    hands.sort();
+    dbg!(&hands);
+    let mut points = 0;
+    for (i, card) in hands.iter().enumerate() {
+        points += (i + 1) * card.value;
+    }
+    points
+}
 
 #[cfg(test)]
 mod tests {
@@ -95,43 +142,50 @@ mod tests {
     #[test]
     fn one() {
         let v = "32T3K";
-        assert_eq!(Hand::new(v).get_type(), Type::One);
+        assert_eq!(Hand::new(v, 1).get_type(), Type::One);
     }
 
     #[test]
     fn two() {
         let v = "23432";
-        assert_eq!(Hand::new(v).get_type(), Type::Two);
+        assert_eq!(Hand::new(v, 1).get_type(), Type::Two);
     }
 
     #[test]
     fn three() {
         let v = "TT98T";
-        assert_eq!(Hand::new(v).get_type(), Type::Three);
+        assert_eq!(Hand::new(v, 1).get_type(), Type::Three);
     }
 
     #[test]
     fn full() {
         let v = "2AAA2";
-        assert_eq!(Hand::new(v).get_type(), Type::Full);
+        assert_eq!(Hand::new(v, 1).get_type(), Type::Full);
     }
 
     #[test]
     fn four() {
         let v = "JQJJJ";
-        assert_eq!(Hand::new(v).get_type(), Type::Four);
+        assert_eq!(Hand::new(v, 1).get_type(), Type::Four);
     }
 
     #[test]
     fn five() {
         let v = "99999";
-        assert_eq!(Hand::new(v).get_type(), Type::Five);
+        assert_eq!(Hand::new(v, 1).get_type(), Type::Five);
     }
 
     #[test]
     fn five_bigger_four() {
         let a = "99999";
         let b = "99998";
-        assert!(Hand::new(a).get_type() > Hand::new(b).get_type());
+        assert!(Hand::new(a, 1).get_type() > Hand::new(b, 1).get_type());
+    }
+
+    #[test]
+    fn order() {
+        let a = "QQQJA 2\nTJJT 1";
+        let result = parse(a);
+        assert_eq!(result, 5);
     }
 }
