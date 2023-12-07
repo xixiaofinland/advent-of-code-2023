@@ -57,6 +57,7 @@ impl Hand {
         let cards: Vec<usize> = cards
             .chars()
             .map(|c| match c {
+                'J' => 1,
                 '2' => 2,
                 '3' => 3,
                 '4' => 4,
@@ -66,10 +67,9 @@ impl Hand {
                 '8' => 8,
                 '9' => 9,
                 'T' => 10,
-                'J' => 11,
-                'Q' => 12,
-                'K' => 13,
-                'A' => 14,
+                'Q' => 11,
+                'K' => 12,
+                'A' => 13,
                 _ => todo!(),
             })
             .collect();
@@ -81,9 +81,23 @@ impl Hand {
 
     fn get_type(cards: &Vec<usize>) -> Type {
         let mut duplicates = vec![0; 15];
+        let mut joker_num = 0;
         for c in cards {
+            if *c == 1 {
+                joker_num += 1;
+            }
             duplicates[*c] += 1;
         }
+
+        // TODO:
+        let max = duplicates.iter().max().unwrap();
+        let mut index_to_change = 0;
+        for (i, d) in duplicates.iter().enumerate() {
+            if d == max {
+                index_to_change = i;
+            }
+        }
+        duplicates[index_to_change] += joker_num;
 
         if duplicates.contains(&5) {
             return Type::Five;
@@ -127,6 +141,7 @@ fn parse(input: &str) -> usize {
         hands.push(Hand::new(cards, value));
     }
     hands.sort();
+    dbg!(&hands);
     let mut points = 0;
     for (i, card) in hands.iter().enumerate() {
         points += (i + 1) * card.value;
