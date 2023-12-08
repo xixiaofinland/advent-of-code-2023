@@ -89,6 +89,10 @@ impl Hand {
             duplicates[*c] += 1;
         }
 
+        if joker_num == 5 {
+            return Type::Five;
+        }
+
         // TODO:
         let max = duplicates.iter().max().unwrap();
         let mut index_to_change = 0;
@@ -141,7 +145,13 @@ fn parse(input: &str) -> usize {
         hands.push(Hand::new(cards, value));
     }
     hands.sort();
-    dbg!(&hands);
+    for (i, h) in hands.iter().enumerate() {
+        if h.value == 396 {
+            dbg!(&hands[i - 1]);
+            dbg!(&h);
+            dbg!(&hands[i + 1]);
+        }
+    }
     let mut points = 0;
     for (i, card) in hands.iter().enumerate() {
         points += (i + 1) * card.value;
