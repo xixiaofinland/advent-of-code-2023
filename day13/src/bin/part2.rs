@@ -45,11 +45,13 @@ fn cal(lines: &Vec<Vec<char>>, columns: &Vec<Vec<char>>) -> usize {
         if i == 0 {
             if one_node_diff_only(&lines[i], &lines[i + 1]) {
                 count += 100;
+                println!("Lstart-{}-{}", i, count);
                 break;
             }
         } else if i == lines.len() - 2 {
             if one_node_diff_only(&lines[i], &lines[i + 1]) {
                 count += 100 * (i + 1);
+                println!("Lend-{}-{}", i, count);
                 break;
             }
         } else {
@@ -74,9 +76,9 @@ fn cal(lines: &Vec<Vec<char>>, columns: &Vec<Vec<char>>) -> usize {
                         break;
                     }
                 }
-                if is_reflect {
-                    dbg!(count);
+                if is_reflect && found == 1 {
                     count += (i + 1) * 100;
+                    println!("!L-perf_Start-{} {}", i, count);
                     break;
                 }
             } else if one_node_diff_only(&lines[i], &lines[i + 1]) {
@@ -93,32 +95,73 @@ fn cal(lines: &Vec<Vec<char>>, columns: &Vec<Vec<char>>) -> usize {
                     }
                 }
                 if is_reflect {
-                    dbg!(count);
+                    println!("!L-imperf_Start-{} {}", i, count);
                     count += (i + 1) * 100;
                 }
             }
         }
     }
 
-    // for i in 0..columns.len() - 1 {
-    //     if one_node_diff_only(&columns[i], &columns[i + 1]) {
-    //         let mut s: i32 = 1;
-    //         let mut is_reflect = true;
-    //         let ii = i32::try_from(i).unwrap();
-    //         while ii - s >= 0 && ii + 1 + s <= i32::try_from(columns.len()).unwrap() - 1 {
-    //             let ss = usize::try_from(s).unwrap();
-    //             if columns[i - ss] == columns[i + 1 + ss] {
-    //                 s += 1;
-    //             } else {
-    //                 is_reflect = false;
-    //                 break;
-    //             }
-    //         }
-    //         if is_reflect {
-    //             count += i + 1;
-    //         }
-    //     }
-    // }
+    for i in 0..columns.len() - 1 {
+        if i == 0 {
+            if one_node_diff_only(&columns[i], &columns[i + 1]) {
+                count += 1;
+                println!("!Cstart: col {} {}", i, count);
+                break;
+            }
+        } else if i == columns.len() - 2 {
+            if one_node_diff_only(&columns[i], &columns[i + 1]) {
+                count += i + 1;
+                println!("!Cend col {} {}", i, count);
+                break;
+            }
+        } else {
+            if columns[i] == columns[i + 1] {
+                let mut found = 0;
+                let mut s: i32 = 1;
+                let mut is_reflect = true;
+                let ii = i32::try_from(i).unwrap();
+                while ii - s >= 0 && ii + 1 + s <= i32::try_from(columns.len()).unwrap() - 1 {
+                    let ss = usize::try_from(s).unwrap();
+                    if columns[i - ss] == columns[i + 1 + ss] {
+                        s += 1;
+                    } else if one_node_diff_only(&columns[i - ss], &columns[i + 1 + ss]) {
+                        s += 1;
+                        found += 1;
+                        if found > 1 {
+                            is_reflect = false;
+                            break;
+                        }
+                    } else {
+                        is_reflect = false;
+                        break;
+                    }
+                }
+                if is_reflect && found == 1 {
+                    count += i + 1;
+                    println!("!C_perf_ {} {}", i, count);
+                    break;
+                }
+            } else if one_node_diff_only(&columns[i], &columns[i + 1]) {
+                let mut s: i32 = 1;
+                let mut is_reflect = true;
+                let ii = i32::try_from(i).unwrap();
+                while ii - s >= 0 && ii + 1 + s <= i32::try_from(columns.len()).unwrap() - 1 {
+                    let ss = usize::try_from(s).unwrap();
+                    if columns[i - ss] == columns[i + 1 + ss] {
+                        s += 1;
+                    } else {
+                        is_reflect = false;
+                        break;
+                    }
+                }
+                if is_reflect {
+                    println!("!C_imperf_ {} {}", i, count);
+                    count += i + 1;
+                }
+            }
+        }
+    }
     count
 }
 
